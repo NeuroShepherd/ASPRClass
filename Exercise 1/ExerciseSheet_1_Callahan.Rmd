@@ -1,0 +1,300 @@
+---
+title: "Exercise #1"
+subtitle: "Fortgeschrittene Statistische Software für NF - SS 2024"
+date: "`r Sys.Date()`"
+author: Pat Callahan (126722725)
+output:
+  distill::distill_article:
+    toc: true
+    toc_depth: 3
+  pdf_document:
+editor_options: 
+  markdown: 
+    wrap: 72
+bibliography: references.bib
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE, options(dplyr.print_max = 5))
+library(dplyr)
+library(lubridate)
+library(magrittr)
+library(ggplot2)
+```
+
+-   Use a level 2 heading for each new exercise and answer each subtask
+    next to it's bullet point or use a new level 3 heading if you want.
+
+## Special Note for Exercise Sheet 1 (1 Point)
+
+As we are focusing on Rmarkdown itself for this first exercise sheet, we
+kindly ask you to submit solutions as both HTML and PDF document.
+
+-   For the HTML document, please use the `distill` package as a
+    template.
+-   For the PDF document you can use the standard PDF renderer in
+    Rmarkdown. You can use the dropdown menu on the `Knit` button to
+    manually render to PDF.
+
+Note: If you have some issues with rendering to PDF this is really not a
+big problem, it will not cost you many points.
+
+## Exercise 1: Car Rentals (5 Points)
+
+The file `"car_rentals.xlsx"` (on moodle) contains information about
+rented cars. Load it in R and into your environment.
+
+```{r}
+car_rentals <- readxl::read_excel("car_rentals.xlsx")
+```
+
+### Combine the columns containing rental date information to a column named "rental_date". Use two different functions to assign the date variable class
+
+```{r}
+(car_rentals %<>%
+  tidyr::unite("rental_date", rental_date_year, rental_date_month, rental_date_day, sep = "-") %>%
+  # mutate(rental_date = as.Date(rental_date)) 
+  mutate(rental_date = ymd(rental_date)) )
+```
+
+### Create a visualization that makes use of the newly created date variable and at least one other variable.
+
+```{r cum-travel-plot, fig.cap="From sample data set"}
+
+car_rentals %>%
+  group_by(purpose) %>%
+  mutate(cumulative_miles = cumsum(total_km)) %>%
+  ggplot(aes(rental_date, cumulative_miles, color = purpose)) +
+  geom_line() +
+  scale_color_manual(labels = c("Business", "Private"), values = c("red", "blue")) +
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +
+  theme_bw() +
+  labs(title = "Miles Travelled between Oct. '22 and Mar. '23", 
+       subtitle = "Cumulative Kilometers Grouped by Travel Purpose",
+       x = "Date",
+       y = "Cumulative\nKilometers",
+       color = "Travel Purpose") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title.y = element_text(angle = 0, vjust = 0.5),
+    axis.text.x = element_text(angle = 25, vjust = 0.5),
+    panel.grid.minor = element_blank()
+    )
+
+```
+
+Interpretation of Figure \@ref(fig:cum-travel-plot): in the given time
+interval, the amount of miles travelled for both business and private
+purposes has been increasing at a mostly linear trend (with the
+exceptions of the ends of the private travel), and there is consistently
+more distance being travelled for private purposes.
+
+### Create a new column that contains the difference in time between car rental and car return
+
+```{r}
+(car_rentals %<>%
+  tidyr::unite("return_date", return_date_year, return_date_month, return_date_day, sep = "-") %>%
+  mutate(return_date = ymd(return_date)) %>%
+  mutate(rental_duration = difftime(return_date, rental_date)))
+```
+
+### Use tidyverse functions to calculate the average rental duration grouped by the purpose of rental. Interpret your results
+
+```{r}
+car_rentals %>%
+  mutate(rental_duration = as.numeric(rental_duration)) %>%
+  group_by(purpose) %>%
+  summarise(
+    mean_rental_duration_days = round(mean(rental_duration), 2)
+  )
+```
+
+The average rental duration is nearly 3 days more for private purposes
+than for business purposes, and this may explain a large portion of the
+difference in cumulative miles travelled for these different purposes.
+
+## Exercise 2: Programming Languages (4 Points)
+
+Download the languages dataset from moodle and load it into R. The data
+is provided by the programming language database
+[PLDB](https://pldb.io/). You can find a detailed description of all
+variables in the data on the PLDB's website at
+<https://pldb.io/csv.html> and a short description below.
+
+```{r}
+languages <- readr::read_csv("languages.csv")
+# glimpse(languages) 
+```
+
+### Generate a table with the top 15 programming languages and print the language's official title, the year it first appeared and the names of its creators using `knitr::kable()`.
+
+```{r, capt}
+languages %>%
+  slice_min(language_rank, n = 15) %>%
+  select(Title = title, "Inception Year" = appeared, Creators = creators) %>%
+  knitr::kable(
+    caption = "Top 15 Most Popular Programming Languages (Source: PLDB)"
+  )
+```
+
+### Add a caption to your table. Who created the second most famous programming language?
+
+```{r}
+
+# Note that language_rank indexes at 0!
+languages %>%
+  dplyr::filter(language_rank == 1) %>%
+  pull(creators)
+```
+
+### Calculate the age of each programming language based on the year it first appeared. Automatically use the current year, so that your code will still correctly function next year. Add the column to the dataframe.
+
+```{r}
+(languages %<>%
+  mutate(language_age = year(Sys.Date()) - appeared))
+```
+
+### Create a scatterplot, showing the estimated number of users of a programming language on the X-axis and the number of papers about the language on the Y-axis.
+
+See below.
+
+### Add an appropriate caption to your figure (as part of the Rmarkdown, not within ggplot) and align the figure to the left of the page.
+
+See below.
+
+### Write a short sentence describing and interpreting the figure. Properly [reference](https://bookdown.org/yihui/rmarkdown-cookbook/cross-ref.html) the figure in your sentence.
+
+See below.
+
+### Write another sentence describing that the figure was generated using `ggplot2` and add a [citation](https://bookdown.org/yihui/rmarkdown-cookbook/bibliography.html) for `ggplot2`.
+
+```{r prog-lang-plot, fig.cap="Data sourced from the Programming Language Database.", fig.align='left'}
+# I don't see anything about papers, but rather a books column...
+languages %>%
+  ggplot(aes(x = number_of_users, y = book_count)) +
+  geom_point(alpha = 0.4, color = "red") +
+  theme_bw() +
+  labs(title = "Number of Users vs. Books\nfor Various Programming Languages", 
+       x = "Number of Users",
+       y = "Number of\nPublished\nBooks") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title.y = element_text(angle = 0, vjust = 0.5),
+    axis.text.x = element_text(angle = 25, vjust = 0.5),
+    panel.grid.minor = element_blank()
+    )
+
+```
+
+In general, Figure \@ref(fig:prog-lang-plot) indicates that the more
+users a given language has, the greater the quantity of published books
+are available for it; however, there is a great amount of variability in
+this. Plot generated using the {ggplot2} package [@wickham2016].
+
+### Calculate the correlation between the estimated number of users and number of papers. Write a sentence in Markdown and automatically insert the correct number.
+
+```{r}
+
+(book_user_cor <- cor(languages$number_of_users, languages$book_count))
+
+```
+
+There is a correlation of `r round(book_user_cor, 3)` between the number
+of books published and the number of users of a language.
+
+## Exercise 3: Programming Languages 2 (5 Points)
+
+### The column `number_of_users` holds the estimated number of users for each programming language. Compute the fraction of users each programming language has, based on the total sum of users in the dataset.
+
+```{r}
+
+total_users <- sum(languages$number_of_users)
+languages %>%
+  group_by(pldb_id) %>%
+  summarize(
+    user_fraction = number_of_users/total_users
+  )
+
+```
+
+### Output a formatted table with the **top 13** languages ordered by the fraction of users. Include the language's title, the number of users and the fraction of total users.
+
+-   Add a caption to the table.
+-   Display the fraction of users rounded to 3 digits, without rounding
+    by hand.
+
+> Tip: Check out the options in `knitr::kable()`
+
+```{r popular-langs}
+
+languages %>%
+  select(title,number_of_users) %>%
+  slice_max(number_of_users, n=13) %>%
+  group_by(title) %>%
+  summarize(
+    number_of_users = number_of_users,
+    user_fraction = number_of_users/total_users
+  ) %>%
+  arrange(desc(user_fraction)) %>%
+  rename(Language = title, "Number of Users" = number_of_users, "User Fraction" = user_fraction) %>%
+  knitr::kable(digits = 3, caption = "Is this needed?")
+```
+
+### Write one or two sentences describing the table, focusing on its *13th* entry in particular. Include an adequate [citation](https://bookdown.org/yihui/rmarkdown-cookbook/bibliography.html) for the language and properly [reference](https://bookdown.org/yihui/rmarkdown-cookbook/cross-ref.html) the table.
+
+> Note: Proper referencing of the table will only work when rendering to
+> a PDF. Don't get hung up on this if it provides some problems, as
+> dealing with LaTeX can be a bit tricky.
+
+Text about R [@rcoreteam2024] which is in the Table
+\@ref(tab:popular-langs)
+
+# References
+
+(It wasn't initially clear to me why the instructions requested I move
+this section to before Supplementary Materials as I had only been
+rendering the distill document, but I see the PDF rendering places the
+references here.)
+
+::: {#refs}
+:::
+
+# Supplementary Materials
+
+### Create a histogram illustrating the distribution of the ages of different programming languages.
+
+```{r}
+languages %>%
+  ggplot(aes(language_age)) +
+  geom_bar()
+```
+
+### Do you encounter anything surprising in your histogram? Briefly describe the issue at hand and explore the data to better understand why it occurs.
+
+Surprisingly, there are programming languages with origins much older
+than the 20th century. Filtering the data set to only view languages
+greater than 100 years old reveals that numeric systems one would not
+traditionally think of as a "computer" language in the modern sense are
+included such as Morse code and Arabic numerals.
+
+```{r}
+languages %>%
+  dplyr::filter(language_age > 100)
+```
+
+### Update the graphic to resolve this issue or work around it and add a caption to your figure.
+
+I'm arbitrarily choosing to filter for languages that appeared only in
+the years immediately preceding the second world war given that many advancements
+towards modern computing began around this time.
+
+```{r}
+
+languages %>%
+  dplyr::filter(appeared >= 1930) %>%
+  ggplot(aes(language_age)) +
+  geom_bar()
+
+```
