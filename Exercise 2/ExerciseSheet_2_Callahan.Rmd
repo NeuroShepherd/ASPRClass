@@ -1,0 +1,296 @@
+---
+title: "Exercise #2"
+subtitle: "Fortgeschrittene Statistische Software für NF - SS 2022/23"
+date: "`r Sys.Date()`"
+author: "Pat Callahan (Matrikelnummer: 12672775)"
+output:
+  bookdown::html_document2:
+    base_format: distill::distill_article
+    toc: true
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=TRUE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      options(dplyr.print_max = 5),
+                      fig.pos = "H", out.extra = "",
+                      results = "hold")
+library(dplyr)
+library(lubridate)
+library(magrittr)
+library(ggplot2)
+theme_set(theme_bw())
+library(devtools)
+library(reticulate)
+# use_python('/usr/local/bin/python3.11-intel64')
+```
+
+## Exercise 1: Linear Regression (8 Points)
+
+In this exercise we will use the `london_marathon` dataset from this
+repository: <https://github.com/nrennie/LondonMarathon>.
+
+### Make yourself familiar with the data and look in the [repository](https://github.com/nrennie/LondonMarathon) to read how to load it into R. To access the data you might need to install the `"remotes"` package.
+
+```{r, cache=TRUE}
+devtools::install_github("nrennie/LondonMarathon")
+data("london_marathon", package = "LondonMarathon")
+glimpse(london_marathon)
+```
+
+### Create a variable that for each marathon calculates the percentage of finishers, based on the number of starters. Second, create a variable that calculates the percentage of accepted applications. Last, create a binary variable that is `1` when the marathon was conducted in April and `0` for all other months.
+
+```{r}
+london_marathon %<>%
+  mutate(
+    finishers_percent = Finishers/Starters,
+    event_in_april = if_else(month(Date, label = TRUE) == "Apr", 1, 0)
+         ) %>%
+  dplyr::filter(Year <= 2020)
+
+london_marathon %>%
+  select(finishers_percent, event_in_april) %>%
+  head()
+```
+
+### Run a linear regression that uses the newly created percentage of finishers as a *dependent variable*. Use the following 4 *independent variables*: Year, Applicants, Accepted applicants percentage, April (Yes/No).
+
+```{r}
+london_marathon_fit <- lm(finishers_percent ~ Year + Applicants + I(Accepted/Applicants) + event_in_april, 
+                          data = london_marathon)
+```
+
+### Use the appropriate easystats package to automatically generate a report of the model you created.
+
+```{r, results='asis'}
+cat("<blockquote>\n",
+      report::report(london_marathon_fit),
+      "\n</blockquote>"
+)
+```
+
+### Choose one numerical and one non-numerical independent variable and interpret the regression coefficients.
+
+Year can be considered a numerical independent variable in this model,
+and at an $\alpha$ threshold of 0.05, it has a statistically significant (p
+\< .001) and positive relationship ($\beta$ = 0.00258 percentage
+points/year) to the percent of people finishing the marathon.
+
+The binary/non-numerical variable for indicating whether or not the
+marathon occurred in April was likewise positive ($\beta$ = 0.06 percentage
+points if occurring in April) in direction and statistically significant
+(p \< .001) at an $\alpha$ threshold of 0.05.
+
+### Now try to interpret these coefficients substantively. Please note, that there is no absolute truth here and we will give points for good reasoning.
+
+The absolute effect of Year on the proportion of people completing the
+marathon is quite small, but could be indicative of overall trends that
+people who participate in marathons are more prepared or otherwise more
+capable of completing them than several decades prior. Data from other
+marathons would be needed in order to evaluate this more general claim,
+but this seems to hold true at least for the London Marathon.
+
+The relationship between percentage of people completing the marathon
+and occurrence of the marathon in April is a small effect at $\beta$=0.06, and has no directly interpretable meaning. That is, there is
+nothing inherent to April that should make completion any easier or more
+difficult compared to other months; instead, factors such as weather or the amount of time people
+have to train and prepare for the marathon may be lurking variables here. 
+
+Additionally, as seen in the table below, almost all of the marathons have occurred in April so this could simply be a spurious relationship.
+
+And as one last note, the only marathon in this data set to take place in October occurred in 2020 which was the height of the global coronavirus pandemic.
+
+```{r}
+london_marathon %>% 
+  mutate(month = month(Date)) %>% 
+  group_by(month) %>%
+  summarize(
+    count = n(),
+    avg_finishers_percent = mean(finishers_percent, na.rm = T)
+  )
+```
+
+
+### Visualize your model results in both, a residual plot and a coefficient plot. Describe what you see in one sentence each.
+
+#### Residuals
+
+```{r}
+
+ggplot(london_marathon_fit, aes(x = .fitted, y = .resid)) + 
+  geom_point() +
+    labs(
+      x = "Fitted Values",
+      y = "Residaul Values",
+      title = "Residuals"
+    )
+
+```
+
+There appears to be more variability in the residuals towards the lower end of the fitted values, and quite a gap in predicted values between 90% and ~93% completion. However, I think this is nitpicking the residual plot particularly given that the model was only built with ~40 data points yet still seems to provide some useful insights into the London Marathon over time.
+
+#### Coefficients
+
+```{r}
+
+london_marathon_fit %>%
+  broom::tidy(conf.int = TRUE) %>%
+  dplyr::filter(term != "(Intercept)") %>%
+  ggplot(aes(estimate, term)) +
+    geom_point() +
+    geom_vline(xintercept = 0, lty = 2) +
+    geom_errorbarh(aes(xmin = conf.low, xmax = conf.high)) +
+    labs(
+      x = "Estimate of effect of variable on\npercentage finishing the London Marathon",
+      y = NULL,
+      title = "Coefficient plot with error bars"
+    )
+
+```
+
+The plot visually represents that 3 of the 4 variables included in the model have a statistically significant effect on explaining the percentage of marathon finishers (although the Applicants variable should probably be rescaled to hundreds or thousands of people applying to more clearly understand the impact.) That is, the 95% confidence intervals of 3 variables *do not* overlap with 0, the point of no effect. 
+
+## Exercise 2: Logistic Regression (5 Points)
+
+In this exercise we will use the `Boston` dataset, which is included in
+the `MASS` package.
+
+```{r}
+data("Boston", package = "MASS")
+glimpse(Boston)
+```
+
+### Create a new binary variable that indicates whether the price of a house is above average or below (building on the variable medv). It should be `1` if it is above average and `0` if not. This is the variable we will use as the dependent variable in the logistic regression later on.
+
+```{r}
+Boston %<>%
+  mutate(above_avg_price = as.numeric(medv > mean(medv)))
+```
+
+### Select at least 3 variables that you would like to include in a logistic regression on your newly created variable. Make a case for each variable why it should be included.
+
+```{r}
+
+correlations <- cor(Boston)
+
+corrplot::corrplot(correlations, method = 'square', order = 'FPC', type = 'lower', diag = FALSE)
+
+```
+
+I have created a correlation plot to determine which variables are most highly correlated with our outcome variable of interest, `above_avg_price`.
+
+* **`indus`**: proportion of non-retail business acres per town.
+* **`nox`**: nitrogen oxides concentration (parts per 10 million).
+* **`rm`**: average number of rooms per dwelling.
+* **`ptratio`**: pupil-teacher ratio by town.
+* **`lstat`**: lower status of the population (percent).
+* **`medv`**: median value of owner-occupied homes in $1000s.
+
+`medv` was used to create the outcome variable so that can't be included as it is necessarily correlated with `above_avg_price`. Using `lstat` seems like a bit of circular logic; people with lower economic status would, more or less by definition, not be able to afford the homes of above average price. Finally, I'm not sure what the causal link between the `indus` variable and outcome would be here so I will likewise exclude that. 
+
+Moreover, the remaining three variables all have compelling reasons to be included. The average number of rooms `rm` per dwelling is generally indicative of larger homes which command more money; lower `nox` levels indicate the home is further from polluted industrial zones which indicates a more desirable location; young (soon-to-be) parents may actively seek out school districts with better education and thus have lower student-teacher ratios `ptratio`.
+
+
+### Run the logistic regression with your 3 chosen independent variables and the dependent variable created in a).
+
+```{r}
+boston_log_fit <- glm(above_avg_price ~ rm + ptratio + nox, 
+                      data = Boston, family = binomial())
+```
+
+### Use the appropriate easystats package to automatically generate a report of the model you created, use the correct function to generate a *shorter version* of this report.
+
+```{r, results='asis'}
+report::report(boston_log_fit) %>%
+  summary() %>%
+  cat("<blockquote>", . , "<\blockquote>")
+```
+
+### Interpret the coefficient for one independent variable of your choice in the logistic regression.
+
+The number of rooms `rm` is statistically significant and positive (beta = 2.30, 95% CI [1.75, 2.92], p < .001, Std. beta = 1.62), and is the odds ratio meaning that there is a greater probability of a house being above averaged price as it has more rooms (and vice versa for below average priced homes.) 
+
+### Create a plot of your choice illustrating one of the effects you saw in the logistic regression. Briefly explain how your plot relates to the logistic regression.
+
+
+```{r, warning=FALSE}
+
+boston_final <- Boston %>%
+  mutate(Probability = predict(boston_log_fit, type = "response") ) %>%
+  rename(Rooms = rm)
+
+
+ggplot(boston_final) +
+  geom_smooth(
+    aes(x=Rooms, y=Probability),
+    method = "glm", method.args = list(family = "binomial"), 
+    se = T) +
+  geom_point(
+    aes(x = Rooms, y = above_avg_price, color = factor(above_avg_price)),
+    alpha = 0.2
+  ) +
+  labs(
+    title = "Effect of Rooms on Classification Probability",
+    color = "Above Average\nHouse Price"
+  )
+
+```
+
+This plot visually demonstrates how the classification probability changes as the number of rooms in the household shifts with the smoothed line representing the function from the fitted model. We can see that the 50/50 probability point occurs around 6.5 rooms. Moreover, the points on the horizontal lines of 0 and 1 are actual data points, and the below-average priced homes appear to be distributed around a mean of ~6 while the above-average priced homes have a mean around ~7 which graphically depicts the number of rooms as being a useful feature.
+
+
+## Exercise 3: Python (2 Points)
+
+Let's repeat one of the exercise tasks in Python to see the differences
+between the two programming languages.
+
+Note: We are aware that setting up Python can be a bit tricky and
+therefore also provide the option of using Google Collab[^1] in case you
+have issues with installing Python. In that case please post a
+*screenshot* of your Google Collab notebook below and also upload the
+raw Notebook as an `ipynb` file. We strongly suggest trying to get
+Python running on your local machine, however, as it will be a much
+smoother setup.
+
+[^1]: You can also use a different online Python environment if you
+    prefer, but please talk to us before doing that so we can agree that
+    it is OK.
+
+Download the raw london marathon dataset as a CSV from here:
+<https://github.com/nrennie/LondonMarathon/blob/main/data-raw/london_marathon.csv>.
+
+### Load the london marathon dataset as a pandas DataFrame.
+
+```{r}
+Sys.which("python")
+# reticulate::py_install("pandas")
+```
+
+```{python}
+import pandas as pd
+lm_data_py = pd.read_csv("https://raw.githubusercontent.com/nrennie/LondonMarathon/main/data-raw/london_marathon.csv")
+
+lm_data_py.head(6)
+```
+
+### Create the same variables as in Exercise 1b), but using Python.
+
+```{python, results='markup'}
+
+lm_data_py.columns
+
+
+perc = lm_data_py.Finishers/lm_data_py.Starters
+lm_data_py = lm_data_py.assign(finishers_percent = perc)
+
+month_april = pd.DatetimeIndex(lm_data_py['Date']).month == 4
+lm_data_py = lm_data_py.assign(event_in_april = month_april.astype(int))
+
+
+lm_data_py.columns
+print(lm_data_py[['finishers_percent', 'event_in_april']].head(6))
+
+```
