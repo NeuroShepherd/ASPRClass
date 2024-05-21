@@ -2,42 +2,33 @@
 title: "Exercise #1"
 subtitle: "Fortgeschrittene Statistische Software für NF - SS 2024"
 date: "`r Sys.Date()`"
-author: Pat Callahan (126722725)
+author: "Pat Callahan (Matrikelnummer: 12672775)"
 output:
-  distill::distill_article:
+  bookdown::pdf_document2:
+    extra_dependencies: ["float"]
+  bookdown::html_document2:
+    base_format: distill::distill_article
     toc: true
-    toc_depth: 3
-  pdf_document:
+    toc_depth: 2
 editor_options: 
   markdown: 
     wrap: 72
 bibliography: references.bib
 ---
 
-```{r setup, include=TRUE}
-knitr::opts_chunk$set(echo = TRUE, options(dplyr.print_max = 5))
+```{r setup, include=TRUE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      options(dplyr.print_max = 5),
+                      fig.pos = "H", out.extra = "")
 library(dplyr)
 library(lubridate)
 library(magrittr)
 library(ggplot2)
 ```
 
--   Use a level 2 heading for each new exercise and answer each subtask
-    next to it's bullet point or use a new level 3 heading if you want.
+\newpage
 
-## Special Note for Exercise Sheet 1 (1 Point)
-
-As we are focusing on Rmarkdown itself for this first exercise sheet, we
-kindly ask you to submit solutions as both HTML and PDF document.
-
--   For the HTML document, please use the `distill` package as a
-    template.
--   For the PDF document you can use the standard PDF renderer in
-    Rmarkdown. You can use the dropdown menu on the `Knit` button to
-    manually render to PDF.
-
-Note: If you have some issues with rendering to PDF this is really not a
-big problem, it will not cost you many points.
+# Exercises
 
 ## Exercise 1: Car Rentals (5 Points)
 
@@ -52,7 +43,9 @@ car_rentals <- readxl::read_excel("car_rentals.xlsx")
 
 ```{r}
 (car_rentals %<>%
-  tidyr::unite("rental_date", rental_date_year, rental_date_month, rental_date_day, sep = "-") %>%
+  tidyr::unite("rental_date", 
+               rental_date_year, rental_date_month, rental_date_day, 
+               sep = "-") %>%
   # mutate(rental_date = as.Date(rental_date)) 
   mutate(rental_date = ymd(rental_date)) )
 ```
@@ -94,7 +87,9 @@ more distance being travelled for private purposes.
 
 ```{r}
 (car_rentals %<>%
-  tidyr::unite("return_date", return_date_year, return_date_month, return_date_day, sep = "-") %>%
+  tidyr::unite("return_date", 
+               return_date_year, return_date_month, return_date_day, 
+               sep = "-") %>%
   mutate(return_date = ymd(return_date)) %>%
   mutate(rental_duration = difftime(return_date, rental_date)))
 ```
@@ -129,7 +124,8 @@ languages <- readr::read_csv("languages.csv")
 
 ### Generate a table with the top 15 programming languages and print the language's official title, the year it first appeared and the names of its creators using `knitr::kable()`.
 
-```{r, capt}
+
+```{r capt}
 languages %>%
   slice_min(language_rank, n = 15) %>%
   select(Title = title, "Inception Year" = appeared, Creators = creators) %>%
@@ -137,6 +133,7 @@ languages %>%
     caption = "Top 15 Most Popular Programming Languages (Source: PLDB)"
   )
 ```
+
 
 ### Add a caption to your table. Who created the second most famous programming language?
 
@@ -153,6 +150,10 @@ languages %>%
 ```{r}
 (languages %<>%
   mutate(language_age = year(Sys.Date()) - appeared))
+
+languages %>%
+  select(title, language_age) %>%
+  head(5)
 ```
 
 ### Create a scatterplot, showing the estimated number of users of a programming language on the X-axis and the number of papers about the language on the Y-axis.
@@ -172,12 +173,12 @@ See below.
 ```{r prog-lang-plot, fig.cap="Data sourced from the Programming Language Database.", fig.align='left'}
 # I don't see anything about papers, but rather a books column...
 languages %>%
-  ggplot(aes(x = number_of_users, y = book_count)) +
+  ggplot(aes(x = log(number_of_users), y = semantic_scholar)) +
   geom_point(alpha = 0.4, color = "red") +
   theme_bw() +
   labs(title = "Number of Users vs. Books\nfor Various Programming Languages", 
-       x = "Number of Users",
-       y = "Number of\nPublished\nBooks") +
+       x = "Natural Log of Number of Users",
+       y = "Semantic\nScholar\nScore") +
   theme(
     plot.title = element_text(hjust = 0.5),
     plot.subtitle = element_text(hjust = 0.5),
@@ -189,20 +190,28 @@ languages %>%
 ```
 
 In general, Figure \@ref(fig:prog-lang-plot) indicates that the more
-users a given language has, the greater the quantity of published books
-are available for it; however, there is a great amount of variability in
-this. Plot generated using the {ggplot2} package [@wickham2016].
+users a given language has, the greater the quantity of published
+content is available for it; however, this association appears quite
+weak and there is a great amount of variability in this. I opted to plot
+the log of the number of users given that some popular languages (e.g.
+SQL, JavaScript) will and do have many orders of magnitude more users
+than some of the obscure, esoteric languages.
+
+Plot generated using the {ggplot2} package [@wickham2016].
 
 ### Calculate the correlation between the estimated number of users and number of papers. Write a sentence in Markdown and automatically insert the correct number.
 
 ```{r}
 
-(book_user_cor <- cor(languages$number_of_users, languages$book_count))
+(book_user_cor <- cor(languages$number_of_users, 
+                      languages$semantic_scholar, 
+                      use = "complete.obs"))
 
 ```
 
 There is a correlation of `r round(book_user_cor, 3)` between the number
-of books published and the number of users of a language.
+of publications measured by Semantic Scholar and the number of users of
+a language.
 
 ## Exercise 3: Programming Languages 2 (5 Points)
 
@@ -238,8 +247,12 @@ languages %>%
     user_fraction = number_of_users/total_users
   ) %>%
   arrange(desc(user_fraction)) %>%
-  rename(Language = title, "Number of Users" = number_of_users, "User Fraction" = user_fraction) %>%
-  knitr::kable(digits = 3, caption = "Is this needed?")
+  rename(Language = title, 
+         "Number of Users" = number_of_users, 
+         "User Fraction" = user_fraction) %>%
+  knitr::kable(digits = 3, 
+               caption = "Top 13 most popular programming languages by user count",
+               format.args = list(big.mark = ",")) 
 ```
 
 ### Write one or two sentences describing the table, focusing on its *13th* entry in particular. Include an adequate [citation](https://bookdown.org/yihui/rmarkdown-cookbook/bibliography.html) for the language and properly [reference](https://bookdown.org/yihui/rmarkdown-cookbook/cross-ref.html) the table.
@@ -248,9 +261,15 @@ languages %>%
 > a PDF. Don't get hung up on this if it provides some problems, as
 > dealing with LaTeX can be a bit tricky.
 
-Text about R [@rcoreteam2024] which is in the Table
-\@ref(tab:popular-langs)
+Table \@ref(tab:popular-langs) shows that the R programming language
+[@rcoreteam2024] is the 13th most popular programming language based on
+reported number of users. Given its growing popularity in university
+courses, academia, and in some industries such as pharmaceuticals as a
+free and open source language, it is unsurprising that this
+traditionally "statistical programming language" is among the most
+popular in the world.
 
+\newpage 
 # References
 
 (It wasn't initially clear to me why the instructions requested I move
@@ -261,6 +280,8 @@ references here.)
 ::: {#refs}
 :::
 
+\newpage
+
 # Supplementary Materials
 
 ### Create a histogram illustrating the distribution of the ages of different programming languages.
@@ -268,7 +289,10 @@ references here.)
 ```{r}
 languages %>%
   ggplot(aes(language_age)) +
-  geom_bar()
+  geom_bar() +
+  labs(title = "Histogram of Programming Language Ages") +
+  xlab("Age of Language") +
+  ylab("Number of Languages")
 ```
 
 ### Do you encounter anything surprising in your histogram? Briefly describe the issue at hand and explore the data to better understand why it occurs.
@@ -287,14 +311,18 @@ languages %>%
 ### Update the graphic to resolve this issue or work around it and add a caption to your figure.
 
 I'm arbitrarily choosing to filter for languages that appeared only in
-the years immediately preceding the second world war given that many advancements
-towards modern computing began around this time.
+the years immediately preceding the second world war given that many
+advancements towards modern computing began around this time.
 
-```{r}
+```{r, fig.cap="Distribution of programming language ages, filtered for languages that emerged in 1930 or later."}
 
 languages %>%
   dplyr::filter(appeared >= 1930) %>%
   ggplot(aes(language_age)) +
-  geom_bar()
+  geom_bar() +
+  labs(title = "Histogram of Programming Language Ages",
+       subtitle = "Created since 1930") +
+  xlab("Age of Language") +
+  ylab("Number of Languages")
 
 ```
