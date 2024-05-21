@@ -56,6 +56,8 @@ london_marathon %>%
   head()
 ```
 
+I removed the observations occurring after 2020 because they were empty/`NA` observations.
+
 ### Run a linear regression that uses the newly created percentage of finishers as a *dependent variable*. Use the following 4 *independent variables*: Year, Applicants, Accepted applicants percentage, April (Yes/No).
 
 ```{r}
@@ -97,11 +99,11 @@ The relationship between percentage of people completing the marathon
 and occurrence of the marathon in April is a small effect at $\beta$=0.06, and has no directly interpretable meaning. That is, there is
 nothing inherent to April that should make completion any easier or more
 difficult compared to other months; instead, factors such as weather or the amount of time people
-have to train and prepare for the marathon may be lurking variables here. 
+have to train and prepare for the marathon that year/marathon season may be lurking variables here. 
 
 Additionally, as seen in the table below, almost all of the marathons have occurred in April so this could simply be a spurious relationship.
 
-And as one last note, the only marathon in this data set to take place in October occurred in 2020 which was the height of the global coronavirus pandemic.
+And as one last note, the only marathon in this data set to take place in October occurred in 2020 which was the height of the global coronavirus pandemic, and had a massive dip in the proportion of people finishing the race.
 
 ```{r}
 london_marathon %>% 
@@ -168,6 +170,11 @@ glimpse(Boston)
 ```{r}
 Boston %<>%
   mutate(above_avg_price = as.numeric(medv > mean(medv)))
+
+Boston %>%
+  select(above_avg_price) %>%
+  head()
+
 ```
 
 ### Select at least 3 variables that you would like to include in a logistic regression on your newly created variable. Make a case for each variable why it should be included.
@@ -180,7 +187,7 @@ corrplot::corrplot(correlations, method = 'square', order = 'FPC', type = 'lower
 
 ```
 
-I have created a correlation plot to determine which variables are most highly correlated with our outcome variable of interest, `above_avg_price`.
+I have created a correlation plot to determine which variables are most highly correlated with our outcome variable of interest, `above_avg_price`, and identified six as being potential candidates for inclusion in a model.
 
 * **`indus`**: proportion of non-retail business acres per town.
 * **`nox`**: nitrogen oxides concentration (parts per 10 million).
@@ -189,7 +196,7 @@ I have created a correlation plot to determine which variables are most highly c
 * **`lstat`**: lower status of the population (percent).
 * **`medv`**: median value of owner-occupied homes in $1000s.
 
-`medv` was used to create the outcome variable so that can't be included as it is necessarily correlated with `above_avg_price`. Using `lstat` seems like a bit of circular logic; people with lower economic status would, more or less by definition, not be able to afford the homes of above average price. Finally, I'm not sure what the causal link between the `indus` variable and outcome would be here so I will likewise exclude that. 
+`medv` was used to create the outcome variable, `above_avg_price`, so that can't be included as it is essentially another formulation of the outcome variable. Using `lstat` seems like a bit of circular logic; people with lower economic status would, more or less by definition, not be able to afford the homes of above average price. Finally, I'm not sure what the causal link between the `indus` variable and outcome would be here so I will likewise exclude that. 
 
 Moreover, the remaining three variables all have compelling reasons to be included. The average number of rooms `rm` per dwelling is generally indicative of larger homes which command more money; lower `nox` levels indicate the home is further from polluted industrial zones which indicates a more desirable location; young (soon-to-be) parents may actively seek out school districts with better education and thus have lower student-teacher ratios `ptratio`.
 
@@ -211,7 +218,7 @@ report::report(boston_log_fit) %>%
 
 ### Interpret the coefficient for one independent variable of your choice in the logistic regression.
 
-The number of rooms `rm` is statistically significant and positive (beta = 2.30, 95% CI [1.75, 2.92], p < .001, Std. beta = 1.62), and is the odds ratio meaning that there is a greater probability of a house being above averaged price as it has more rooms (and vice versa for below average priced homes.) 
+The number of rooms `rm` is statistically significant and positive (beta = 2.30, 95% CI [1.75, 2.92], p < .001, Std. beta = 1.62). This odds ratio value indicates that there is a greater probability of a house being above averaged price as it has more rooms (and vice versa for below average priced homes.) 
 
 ### Create a plot of your choice illustrating one of the effects you saw in the logistic regression. Briefly explain how your plot relates to the logistic regression.
 
