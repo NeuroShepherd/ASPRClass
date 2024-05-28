@@ -210,6 +210,8 @@ determining the research question yourself.
 
 ### Go to <https://github.com/owid/owid-datasets/tree/master/datasets> and choose a dataset that interests you. You can have a look at <https://ourworldindata.org/> to gather some inspiration.
 
+Done.
+
 ### Download the dataset and track it in git.
 
 ### Put the name / title of the dataset and a link to it below.
