@@ -65,7 +65,20 @@ Weaknesses:
 * Can really only function effectively with text files.
 
 
-### Knit this exercise sheet. Some new files will automatically be generated when knitting the sheet e.g. the HTML page. Ignore these files, as we only want to track the source files themselves.
+### Knit this exercise sheet. Some new files will automatically be generated when knitting the sheet e.g. the HTML page. Ignore these files, as we only want to track the source files themselves.
+
+My .gitignore has already been set to ignore many of these files:
+
+```bash
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+**.html
+**.pdf
+**_cache
+**_files
+```
 
 ## Exercise 2: Putting your Repository on GitHub (3.5 Points)
 
