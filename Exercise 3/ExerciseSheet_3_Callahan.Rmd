@@ -214,6 +214,8 @@ Done.
 
 ### Download the dataset and track it in git.
 
+Done.
+
 ### Put the name / title of the dataset and a link to it below.
 
 -   Dataset Name: ...
