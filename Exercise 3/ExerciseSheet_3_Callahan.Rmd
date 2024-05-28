@@ -177,7 +177,16 @@ babynamen_2023_imputed %<>%
 
 ### Combine both datasets into one using `bind_rows()`.
 
+```{r}
+combined_babynames <- babynamen_2022_imputed %>%
+  bind_rows(babynamen_2023_imputed)
+
+combined_babynames
+```
+
+
 ### Combine the counts for same names to determine the most popular names across both years. Print out the top 10 names in a nicely formatted table for both years. Include a table caption.
+
 
 ## Exercise 4: Open Analysis (4 points)
 
