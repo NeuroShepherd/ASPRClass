@@ -112,6 +112,47 @@ Done.
 
 ### Load the data for both years into R. Check the type of the count variable ("Anzahl") and look into the data to determine why it is not numeric? Fix the problem in an appropriate manner, it is OK if some of the counts are inaccurate because of this. Explain your solution and the repercussions.
 
+```{r, cache=TRUE, message=FALSE}
+babynamen_2022 <- read_csv("open_data_portal_2022.csv")
+babynamen_2023 <- read_csv("vornamen-muenchen-2023.csv")
+```
+
+```{r, results='hold'}
+babynamen_2022$Anzahl %>% unique()
+babynamen_2023$Anzahl %>% unique()
+```
+
+
+If a baby name appeared 4 or fewer times in a year, then those results were binned together into the "4 oder weniger" bin. However, this is causing all values in the column to be coerced to type character, and we cannot perform mathematical operations on it. 
+
+My solution: for values that are "4 oder weniger", I have decided to quasi-randomly assign a value on the range [1, 4] with an inflated probability for the value of 1 and a uniform probability distribution on the range [2,4]. I'm choosing an inflated value for 1 because there are likely many unique names that only appear once. I make no other assumption about the values on range [2,4] hence the uniform distribution. 
+
+I think this is better than a completely naive randomization or assuming that all values in the "4 oder weniger" bin are just 1 or 4. However, this is only an educated guess, and I cannot find information online to verify if the total number of births I calculate for each year are close to accurate.
+
+
+```{r}
+set.seed(1)
+range_randomizer <- function(variable) {
+  sample(1:4, 1, replace = T, prob = c(1/2,1/6,1/6,1/6))
+}
+
+babynamen_2022_imputed <- babynamen_2022 %>%
+  mutate(Anzahl = if_else(Anzahl == "4 oder weniger",
+                          as.character(range_randomizer()),
+                          Anzahl) %>%
+           as.numeric()
+         ) 
+
+babynamen_2023_imputed <- babynamen_2023 %>%
+  mutate(Anzahl = if_else(Anzahl == "4 oder weniger",
+                          as.character(range_randomizer()),
+                          Anzahl) %>%
+           as.numeric()
+         ) 
+```
+
+
+
 ### Calculate the total number of babies born in Munich in 2022 and 2023. Which year had the bigger baby-boom?
 
 ### Add a new column `year` to both datasets which holds the correct year for each.
