@@ -229,6 +229,31 @@ However, I want to explore whether these trends are different across the differe
 
 ### Use R to answer your chosen question.
 
+```{r, results='asis'}
+obesity_data <- read_csv("Adult obesity by region - FAO (2017).csv") %>%
+  rename(obesity_percentage = "Prevalence of obesity in adults (18+ years old) (FAO (2017))") %>%
+  mutate(
+    Entity = factor(Entity,
+      levels = c('World', 'Africa', 'Asia', 'Latin America and the Caribbean', 'North America and Europe', 'Oceania'))
+  )
+
+
+obesity_model <- lm(obesity_percentage ~ Entity + Year, data = obesity_data) 
+
+report::report(obesity_model)
+```
+
+The results indicate that, as expected, there is a general global trend for increasing obesity rates ($\beta = 0.31$) over the time period of the data set. Relative to the "reference group" of the whole World, all of the continents have statistically significant different rates of change, however. Both Africa and Asia have negative coefficients indicating there is a protective effect against obesity for residents of these continents whereas people in Latin America and the Caribbean, North America and Europe, and Oceania have statistically significant positive coefficients indicating a more rapid increase in obesity for these residents relative to the global rate.
+
+The post-hoc analysis below likewise quantifies all of the pairwise differences between the continents' rates of change.
+
+```{r, layout="l-page", fig.width=8, results='asis'}
+TukeyHSD(aov(obesity_model), which = "Entity") %>%
+  broom::tidy() %>%
+  select(contrast, estimate:adj.p.value) %>%
+  knitr::kable(caption = "Tukey adjusted pairwise comparisons between continents")
+```
+
 
 ### Create a meaningful plot / figure with the dataset. Make sure to provide a figure caption (via the chunk options / Rmarkdown) and correctly label the figure.
 
