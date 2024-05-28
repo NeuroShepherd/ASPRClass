@@ -108,6 +108,8 @@ Link: <https://opendata.muenchen.de/dataset/vornamen-von-neugeborenen>
 
 ### Download the data for both years and track it in git. For small datasets like these adding them to git is not a problem.
 
+Done.
+
 ### Load the data for both years into R. Check the type of the count variable ("Anzahl") and look into the data to determine why it is not numeric? Fix the problem in an appropriate manner, it is OK if some of the counts are inaccurate because of this. Explain your solution and the repercussions.
 
 ### Calculate the total number of babies born in Munich in 2022 and 2023. Which year had the bigger baby-boom?
