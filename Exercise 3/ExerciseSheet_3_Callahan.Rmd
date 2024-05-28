@@ -257,6 +257,30 @@ TukeyHSD(aov(obesity_model), which = "Entity") %>%
 
 ### Create a meaningful plot / figure with the dataset. Make sure to provide a figure caption (via the chunk options / Rmarkdown) and correctly label the figure.
 
+```{r}
+
+obesity_data %>%
+  ggplot(aes(Year, obesity_percentage, color = Entity)) +
+  geom_smooth(method = "lm", stat = "smooth", se = T) +
+  labs(
+    title = "Trends in Global Obesity Rates over Time",
+    subtitle = "By Continent",
+    y = "Obesity %",
+    color = "Region"
+  ) +
+  scale_color_manual(labels = c('World', 'Africa', 'Asia', 'Latin America and\nthe Caribbean', 'North America\nand Europe', 'Oceania'),
+                     values = c("#845ec2", "#4b4453", "#00c9a7", "#c34a36", "#ff8066", "#4e8397")) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title.y = element_text(angle = 0, vjust = 0.5),
+    axis.text.x = element_text(angle = 25, vjust = 0.5),
+    panel.grid.minor = element_blank()
+    )
+
+```
+
+
 ## Final Note
 
 Make sure to push all your commits and changes to GitHub before
