@@ -24,9 +24,6 @@ library(lubridate)
 library(magrittr)
 library(ggplot2)
 theme_set(theme_bw())
-library(devtools)
-library(reticulate)
-# use_python('/usr/local/bin/python3.11-intel64')
 ```
 
 ## Exercise 1: Initializing git (4 Points)
@@ -119,8 +116,8 @@ babynamen_2023 <- read_csv("vornamen-muenchen-2023.csv")
 ```
 
 ```{r, results='hold'}
-babynamen_2022$Anzahl %>% unique()
-babynamen_2023$Anzahl %>% unique()
+babynamen_2022$Anzahl %>% unique() %>% head()
+babynamen_2023$Anzahl %>% unique() %>% tail()
 ```
 
 
@@ -133,7 +130,7 @@ I think this is better than a completely naive randomization or assuming that al
 
 ```{r}
 set.seed(1)
-range_randomizer <- function(variable) {
+range_randomizer <- function() {
   sample(1:4, 1, replace = T, prob = c(1/2,1/6,1/6,1/6))
 }
 
@@ -161,7 +158,7 @@ babynamen_2023_imputed <- babynamen_2023 %>%
 (babies_2023 <- sum(babynamen_2023_imputed$Anzahl))
 ```
 
-After the data imputation procedure, there were `r babies_2022` born in 2022 and `r babies_2023` born in 2023. There were more born in 2022 which I think I think makes sense as many people became pregnant during the height of the covid pandemic in 2020-2021.
+After the data imputation procedure, there were `r babies_2022` born in 2022 and `r babies_2023` born in 2023. There were more born in 2022 which I think I think makes sense as many people became pregnant during the height of the covid pandemic into 2021.
 
 ### Add a new column `year` to both datasets which holds the correct year for each.
 
@@ -219,7 +216,7 @@ Done.
 ### Put the name / title of the dataset and a link to it below.
 
 -   Dataset Name: Adult obesity by region - FAO (2017)
--   Link: <https://github.com/owid/owid-datasets/blob/master/datasets/Adult%20obesity%20by%20region%20-%20FAO%20(2017)/Adult%20obesity%20by%20region%20-%20FAO%20(2017).csv>...
+-   Link: <https://github.com/owid/owid-datasets/blob/master/datasets/Adult%20obesity%20by%20region%20-%20FAO%20(2017)/Adult%20obesity%20by%20region%20-%20FAO%20(2017).csv>
 
 ### Come up with a (research) question you want to answer with the data and briefly explain why you believe this is an interesting question within one sentence. It should be a question that can be answered with the dataset and using R.
 
@@ -243,11 +240,11 @@ obesity_model <- lm(obesity_percentage ~ Entity + Year, data = obesity_data)
 report::report(obesity_model)
 ```
 
-The results indicate that, as expected, there is a general global trend for increasing obesity rates ($\beta = 0.31$) over the time period of the data set. Relative to the "reference group" of the whole World, all of the continents have statistically significant different rates of change, however. Both Africa and Asia have negative coefficients indicating there is a protective effect against obesity for residents of these continents whereas people in Latin America and the Caribbean, North America and Europe, and Oceania have statistically significant positive coefficients indicating a more rapid increase in obesity for these residents relative to the global rate.
+The results indicate that, as expected, there is a general global trend for increasing obesity rates ($\beta = 0.31$) over the time period of the data set. Relative to the "reference group" of the whole World, all of the continents have statistically significant effects, however. Both Africa and Asia have negative coefficients indicating there is a protective effect against obesity for residents of these continents whereas people in Latin America and the Caribbean, North America and Europe, and Oceania have statistically significant positive coefficients indicating a more rapid increase in obesity for these residents relative to the global effect.
 
-The post-hoc analysis below likewise quantifies all of the pairwise differences between the continents' rates of change.
+The post-hoc analysis below likewise quantifies all of the pairwise differences between the continents' effect estimates for increased obesity.
 
-```{r, layout="l-page", fig.width=8, results='asis'}
+```{r, results='asis'}
 TukeyHSD(aov(obesity_model), which = "Entity") %>%
   broom::tidy() %>%
   select(contrast, estimate:adj.p.value) %>%
@@ -257,19 +254,22 @@ TukeyHSD(aov(obesity_model), which = "Entity") %>%
 
 ### Create a meaningful plot / figure with the dataset. Make sure to provide a figure caption (via the chunk options / Rmarkdown) and correctly label the figure.
 
-```{r}
+```{r, fig.cap="All continents are trending updard, but the plotted points are suspiciously consistent and evenly spaced."}
+cont_colors <- c("#845ec2", "#4b4453", "#00c9a7", "#c34a36", "#ff8066", "#4e8397")
 
 obesity_data %>%
   ggplot(aes(Year, obesity_percentage, color = Entity)) +
   geom_smooth(method = "lm", stat = "smooth", se = T) +
+  geom_point() +
   labs(
     title = "Trends in Global Obesity Rates over Time",
     subtitle = "By Continent",
     y = "Obesity %",
     color = "Region"
   ) +
-  scale_color_manual(labels = c('World', 'Africa', 'Asia', 'Latin America and\nthe Caribbean', 'North America\nand Europe', 'Oceania'),
-                     values = c("#845ec2", "#4b4453", "#00c9a7", "#c34a36", "#ff8066", "#4e8397")) +
+  scale_color_manual(labels = c('World', 'Africa', 'Asia', 'Latin America and\nthe Caribbean', 
+                                'North America\nand Europe', 'Oceania'),
+                     values = cont_colors) +
   theme(
     plot.title = element_text(hjust = 0.5),
     plot.subtitle = element_text(hjust = 0.5),
@@ -280,8 +280,8 @@ obesity_data %>%
 
 ```
 
+Documentation on this data set is thin, but, based on how nice and neatly the points plot, I would assume that the values for obesity % were generated by a model; that is, the data I have modeled and plotted is not actually observed obesity data but rather non-linear fitted values `r emoji::emoji("upside-down")`.
 
 ## Final Note
 
-Make sure to push all your commits and changes to GitHub before
-submitting the exercise sheet.
+Make sure to push all your commits and changes to GitHub before submitting the exercise sheet.
