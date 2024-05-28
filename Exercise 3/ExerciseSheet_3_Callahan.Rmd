@@ -165,6 +165,16 @@ After the data imputation procedure, there were `r babies_2022` born in 2022 and
 
 ### Add a new column `year` to both datasets which holds the correct year for each.
 
+```{r}
+babynamen_2022_imputed %<>%
+  mutate(year = 2022)
+
+babynamen_2023_imputed %<>%
+  mutate(year = 2023)
+```
+
+
+
 ### Combine both datasets into one using `bind_rows()`.
 
 ### Combine the counts for same names to determine the most popular names across both years. Print out the top 10 names in a nicely formatted table for both years. Include a table caption.
