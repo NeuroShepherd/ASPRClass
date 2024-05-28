@@ -94,8 +94,9 @@ https://github.com/NeuroShepherd/ASPRClass/tree/exeRcise-sheet-3
 
 Done.
 
-### Regularly push your latest changes to GitHub again and especially do
-    so when you are finished with this sheet.
+### Regularly push your latest changes to GitHub again and especially do so when you are finished with this sheet.
+
+Done.
 
 ## Exercise 3: Baby-Names in Munich (3.5 Points)
 
