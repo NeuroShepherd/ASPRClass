@@ -223,7 +223,12 @@ Done.
 
 ### Come up with a (research) question you want to answer with the data and briefly explain why you believe this is an interesting question within one sentence. It should be a question that can be answered with the dataset and using R.
 
+The data set I selected contains yearly estimates of the proportion of adults who are obese on the continents Africa, Asia, Latin America and the Caribbean, North America and Europe, and Oceania as well as a global estimate labeled as World. This information is available on the year range of 1975 to 2014 in the data set, and I think it is already well-known that there has been a global trend towards increasing obesity over the last several decades. 
+
+However, I want to explore whether these trends are different across the different continents, and to what extent we can quantify any continental differences.
+
 ### Use R to answer your chosen question.
+
 
 ### Create a meaningful plot / figure with the dataset. Make sure to provide a figure caption (via the chunk options / Rmarkdown) and correctly label the figure.
 
