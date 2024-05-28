@@ -14,6 +14,7 @@ editor_options:
 ---
 
 ```{r setup, include=TRUE, message=FALSE}
+options(scipen=999)
 knitr::opts_chunk$set(echo = TRUE, 
                       options(dplyr.print_max = 5),
                       fig.pos = "H", out.extra = "",
@@ -154,6 +155,13 @@ babynamen_2023_imputed <- babynamen_2023 %>%
 
 
 ### Calculate the total number of babies born in Munich in 2022 and 2023. Which year had the bigger baby-boom?
+
+```{r}
+(babies_2022 <- sum(babynamen_2022_imputed$Anzahl))
+(babies_2023 <- sum(babynamen_2023_imputed$Anzahl))
+```
+
+After the data imputation procedure, there were `r babies_2022` born in 2022 and `r babies_2023` born in 2023. There were more born in 2022 which I think I think makes sense as many people became pregnant during the height of the covid pandemic in 2020-2021.
 
 ### Add a new column `year` to both datasets which holds the correct year for each.
 
