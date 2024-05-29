@@ -133,7 +133,7 @@ I think this is better than a completely naive randomization or assuming that al
 ```{r}
 set.seed(1)
 range_randomizer <- function() {
-  sample(1:4, 1, replace = T, prob = c(1/2,1/6,1/6,1/6))
+  sample(1:4, n(), replace = T, prob = c(21/24,1/24,1/24,1/24))
 }
 
 babynamen_2022_imputed <- babynamen_2022 %>%
@@ -160,7 +160,7 @@ babynamen_2023_imputed <- babynamen_2023 %>%
 (babies_2023 <- sum(babynamen_2023_imputed$Anzahl))
 ```
 
-After the data imputation procedure, there were `r babies_2022` born in 2022 and `r babies_2023` born in 2023. There were more born in 2022 which I think I think makes sense as many people became pregnant during the height of the covid pandemic into 2021.
+After the data imputation procedure, there were `r babies_2022` born in 2022 and `r babies_2023` born in 2023. There were more born in 2022 which I think I think makes sense as many people became pregnant during the height of the covid pandemic into 2021. This is reasonably in line with my earlier approximation, and, in practice, it would likely be expected that cities have a higher birth rate than other areas, particularly Munich because it draws so many workers in the 20-30 year old age range.
 
 ### Add a new column `year` to both datasets which holds the correct year for each.
 
