@@ -116,6 +116,9 @@ babynamen_2023 <- read_csv("vornamen-muenchen-2023.csv")
 ```
 
 ```{r, results='hold'}
+babynamen_2022$Anzahl %>% typeof()
+babynamen_2023$Anzahl %>% typeof()
+
 babynamen_2022$Anzahl %>% unique() %>% head()
 babynamen_2023$Anzahl %>% unique() %>% tail()
 ```
