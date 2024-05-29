@@ -7,7 +7,7 @@ output:
   bookdown::html_document2:
     base_format: distill::distill_article
     toc: true
-    toc_depth: 3
+    toc_depth: 2
 editor_options: 
   markdown: 
     wrap: 72
@@ -126,6 +126,8 @@ If a baby name appeared 4 or fewer times in a year, then those results were binn
 My solution: for values that are "4 oder weniger", I have decided to quasi-randomly assign a value on the range [1, 4] with an inflated probability for the value of 1 and a uniform probability distribution on the range [2,4]. I'm choosing an inflated value for 1 because there are likely many unique names that only appear once. I make no other assumption about the values on range [2,4] hence the uniform distribution. 
 
 I think this is better than a completely naive randomization or assuming that all values in the "4 oder weniger" bin are just 1 or 4. However, this is only an educated guess, and I cannot find information online to verify if the total number of births I calculate for each year are close to accurate.
+
+(Approximation: Germany has 83.8 million residents, and 1.472 million of them live in Munich or ~1.7565% of the population. There were ~739,000 births in Germany in 2022. Assuming proportionality, ~12981 of those births should have been in Munich.)
 
 
 ```{r}
