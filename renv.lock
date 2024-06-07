@@ -1406,13 +1406,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "1.0.3",
-      "Source": "Repository",
+      "Version": "1.0.7",
+      "OS_type": null,
       "Repository": "CRAN",
-      "Requirements": [
-        "utils"
-      ],
-      "Hash": "41b847654f567341725473431dd0d5ab"
+      "Source": "Repository"
     },
     "report": {
       "Package": "report",
@@ -1435,25 +1432,8 @@
     },
     "reticulate": {
       "Package": "reticulate",
-      "Version": "1.36.1",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "Matrix",
-        "R",
-        "Rcpp",
-        "RcppTOML",
-        "graphics",
-        "here",
-        "jsonlite",
-        "methods",
-        "png",
-        "rappdirs",
-        "rlang",
-        "utils",
-        "withr"
-      ],
-      "Hash": "e037fb5dc364efdaf616eb6bc05aaca2"
+      "Version": "1.37.0",
+      "Source": "Repository"
     },
     "rlang": {
       "Package": "rlang",
