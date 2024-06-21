@@ -1,0 +1,346 @@
+---
+title: "Exercise #4"
+subtitle: "Fortgeschrittene Statistische Software für NF - SS 2024"
+date: "`r Sys.Date()`"
+author: "Pat Callahan (Matrikelnummer: 12672775)"
+output:
+  bookdown::html_document2:
+    base_format: distill::distill_article
+    toc: true
+    toc_depth: 2
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+
+## Exercise 1: Finding the alps (4 Points)
+
+We want to plan a hiking trip in the Alps and want to use geospatial data science tools to help us with the
+planning. We will use the R packages {osmdata} and {tmap} for this.
+
+```{r}
+library(dplyr)
+library(osmdata)
+library(tmap)
+library(ggplot2)
+theme_set(theme_bw())
+library(gganimate)
+library(png)
+library(gifski)
+set_overpass_url("https://overpass-api.de/api/interpreter")
+```
+
+
+### Start by getting the bounding box for the "Alps" using the appropriate function from {osmdata}.
+
+Reference: https://docs.ropensci.org/osmdata/index.html?q=bounding#bounding-boxes
+
+```{r, cache=TRUE}
+
+(alps_bounding <- osmdata::getbb("Alps"))
+
+```
+
+
+### Adjust the function to return a sf_polygon and plot it using {tmap} to check whether it is correct. Use the function tm_borders to plot just its outline.
+
+* Use the correct argument to plot the borders in "darkgreen"
+* Copy your plotting code and use it with the two different options for tmap_mode() to have one interactive version and one non-interactive version
+
+```{r, cache=TRUE}
+
+alps_sf <- getbb("Alps", format_out = "sf_polygon")
+
+```
+
+```{r, fig.cap="Outline of the Alps Mountain range without other features or context."}
+
+tmap_mode("plot")
+tm_shape(alps_sf, name = "The Alps") +
+  tm_borders(col = "darkgreen") 
+
+```
+
+```{r}
+tmap_mode("view")
+tm_shape(alps_sf, name = "The Alps: Interactive") +
+  tm_borders(col = "darkgreen")
+
+```
+
+Outline of the Alps Mountain range with included country borders on an interactive map.
+
+### Briefly describe the pros and cons of interactive maps and non-interactive maps based on the example you created in b) with one sentence each.
+
+
+Static maps can be useful in cases when one wants to create a highly customized map that is intended to deliver a focused message or meaning to end-users, when various additional pieces of information need to be appended to the graphic, and when the map should be made available in a portable/printable format like a `.png` or `.jpg` file; however, these maps may not always be very generalizable or provide the breadth of information that one wants to gather from a map.
+
+Interactive maps are useful when an end-user or reader will want to more closely inspect different features or areas of the map provided to them, and can often be used to transmit a broader contextualization of data e.g. by allowing the user to explore on different scales or by specific locations (i.e. panning and zooming); however, these maps generally will not be as specific as a static map because hard-coded pieces of information or additional infographics cannot reasonably be appended to the map as the context may changes as a user interacts with the map, and will generally be distributed as `.html` files thus requiring use of a web browser and/or require an internet connection (if udpated access to e.g. OSM is needed).
+
+### It seems the whole alps are a big too big, so let’s just focus on the "Dolimites". Retrieve a bounding box for the Dolomites and plot it’s outline to check whether it’s correct.
+
+
+```{r}
+dolomites_sf <- getbb("Dolomites", format_out = "sf_polygon")
+
+tmap_mode("view")
+tm_shape(dolomites_sf, name = "Dolomites Region") +
+  tm_borders(col = "darkgreen")
+```
+
+A close up interactive map of the Alps Mountain range, focusing in on the Dolomites region.
+
+(The map indicates the Dolomites are in the north east corner of Italy which is correct.)
+
+## Exercise 2: Finding Accommodation (5 Points)
+
+We want to sleep in some remote places (without staff or restaurants) on our hike, so let’s find some using OpenStreetMaps.
+
+### Search for the correct tag to identify wilderness huts in OpenStreetMaps. Write down the tag below and add the URL to its OSMWiki page.
+
+Wilderness huts can be tagged with the key of [`tourism`](https://wiki.openstreetmap.org/wiki/Key:tourism) and the specific tag value of [`wilderness_hut`](https://wiki.openstreetmap.org/wiki/Tag:tourism%3Dwilderness_hut).
+
+### Create the correct OSM query in {osmdata} and execute it to download a list of all wilderness huts in the Dolomites. Use a bounding box for the "Dolomites", but be sure to use the correct format (sf_polygon does not work with queries).
+
+```{r}
+
+dolomite_bb <- getbb("Dolomites")
+dolomite_opq <- opq(dolomite_bb) 
+dolomite_feat <- add_osm_feature(dolomite_opq, key = "tourism", value = "wilderness_hut") 
+
+```
+
+I kept encountering a time-out error from the default Overpass URL (https://overpass.kumi.systems/api/interpreter) so I set a new URL before running `osmdata_sf()`.
+
+```{r}
+
+osmdata::set_overpass_url('https://lz4.overpass-api.de/api/interpreter')
+(dolomite_feat_sf <- osmdata_sf(dolomite_feat))
+
+```
+
+
+
+### How many wilderness huts are there in the Dolomites?
+
+Hint: If you have trouble working with the result, look at the different types of result in there. We’re only interested in osm_points here.
+
+```{r}
+dolomite_hut_points <- dolomite_feat_sf$osm_points %>%
+  tibble()
+
+(dolomite_huts_count <- nrow(dolomite_hut_points))
+```
+
+
+There are `r dolomite_huts_count` tourism wilderness huts in the Dolomites.
+
+### Since these are slightly more huts than expected, let’s only look at the ones that have names. Filter the result to only include huts with names (column name). How many huts are there with names?
+
+```{r}
+
+(dolomite_huts_named_count <- dolomite_hut_points %>%
+  dplyr::filter(!is.na(name)) %>%
+  nrow())
+
+```
+
+
+There are `r dolomite_huts_named_count` **named** tourism wilderness huts in the Dolomites. (Or, at least there are so many in the OSM data set that have been provided names. More of the huts may be named in practice but unreported.)
+
+
+### Use tm_dots to plot the remaining huts on an interactive map.
+
+* Color the dots based on the elevation of the hut (you may need to convert the column ele for this to work properly)
+* Use the hut’s name as id on the map to see it when hovering the dots
+
+```{r}
+
+dolomite_feat_sf$osm_points %>%
+  dplyr::filter(!is.na(name)) %>%
+  mutate(ele = as.numeric(ele)) %>%
+  tm_shape() +
+    tm_dots(id = "name", col = "ele")
+
+```
+
+Interactive map listing the named wilderness huts in the Dolomites region.
+
+### We’re all done! Lastly, select one of the huts that you find appealing and return only its row in the data. What’s the name of the hut you chose and what is its elevation?
+
+The lone hut high in the mountains of Veneto looks interesting; Bivacco Fratelli Fanton.
+
+```{r}
+
+fanton_info <- dolomite_feat_sf$osm_points %>%
+  dplyr::filter(name == "Bivacco Fratelli Fanton") 
+
+fanton_info$ele
+  
+```
+
+This hut is at an elevation of `r fanton_info$ele` meters.
+
+
+## Exercise 3: It’s coming home (6 Points)
+
+In this exercise you will analyze and visualize some datasets, that contain information on every professional football match played in the UK since 1888. You can access the data via this GitHub repository: https: //github.com/jfjelstul/englishfootball
+
+### Load the {matches.csv} file from the {data} folder. Visualize how the number of total goals scored per game has evolved over time. Create a nice and complete plot and interpret what you see in one or two sentences.
+
+```{r, cache=TRUE}
+matches <- read_csv("https://raw.githubusercontent.com/jfjelstul/englishfootball/master/data-csv/matches.csv")
+```
+
+```{r, fig.cap="The average goals scored per game in professional English football games averaged above 4 for the first decade of play, but rapidly decreased to a fluctuating value of around 2.8-3.6 per year through about 1960. Since about 1970, the average goals per game has hovered around 2.75 and shows no further trends up or down which leads me to believe that either defensive strategies developed significantly in the late 20th century or that parity between teams developed as the sport developed into more of a full-time, professional activity."}
+
+# matches$season_id %>% table()
+
+matches %>%
+  mutate(total_goals = home_team_score + away_team_score) %>%
+  group_by(season) %>%
+  summarize(avg_goals_per_game = mean(total_goals)) %>%
+  mutate(season = lubridate::as_date(as.numeric(season))) %>%
+  mutate(`Goal Grouping` = case_when(avg_goals_per_game >= 4 ~ ">=4 Goals",
+                              avg_goals_per_game >= 3 & avg_goals_per_game < 4 ~ "3-4 Goals",
+                              avg_goals_per_game < 3 ~ "<3 Goals") %>%
+           factor(levels = c(">=4 Goals", "3-4 Goals", "<3 Goals"))) %>%
+  ggplot(aes(season, avg_goals_per_game, color = `Goal Grouping`)) +
+  geom_point() +
+  ylim(c(0,5)) +
+  xlim(c(1880,2020)) +
+  scale_color_manual(labels = c(">=4 Goals", "3-4 Goals", "<3 Goals"),
+                     values = c("#d62828","#f77f00","#003049")) + 
+  labs(
+    title = "Trends in Football Goal Scoring",
+    subtitle = "Professional Football in the UK Since 1888",
+    x = "Year",
+    y = "Average Goals\nPer Game") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title.y = element_text(angle = 0, vjust = 0.5),
+    axis.text.x = element_text(angle = 25, vjust = 0.5),
+    panel.grid.minor = element_blank(),
+    legend.position="bottom"
+    )
+
+```
+
+
+### Now create an animated version of your plot and include the GIF in your HTML
+
+```{r, fig.cap="This plot represents the same data as the previous plot, but is animated to give a stronger sense of the decline in average goals per game over time."}
+
+
+goal_plot <- matches %>%
+  mutate(total_goals = home_team_score + away_team_score) %>%
+  group_by(season) %>%
+  summarize(avg_goals_per_game = mean(total_goals)) %>%
+  mutate(season = lubridate::as_date(as.numeric(season))) %>%
+  mutate(`Goal Grouping` = case_when(avg_goals_per_game >= 4 ~ ">=4 Goals",
+                              avg_goals_per_game >= 3 & avg_goals_per_game < 4 ~ "3-4 Goals",
+                              avg_goals_per_game < 3 ~ "<3 Goals") %>%
+           factor(levels = c(">=4 Goals", "3-4 Goals", "<3 Goals"))) %>%
+  ggplot(aes(season, avg_goals_per_game, color = `Goal Grouping`)) +
+  geom_point() +
+  ylim(c(0,5)) +
+  xlim(c(1880,2020)) +
+  scale_color_manual(labels = c(">=4 Goals", "3-4 Goals", "<3 Goals"),
+                     values = c("#d62828","#f77f00","#003049")) + 
+  labs(
+    title = "Trends in Football Goal Scoring",
+    subtitle = "Professional Football in the UK Since 1888",
+    x = "Year",
+    y = "Average Goals\nPer Game") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title.y = element_text(angle = 0, vjust = 0.5),
+    axis.text.x = element_text(angle = 25, vjust = 0.5),
+    panel.grid.minor = element_blank(),
+    legend.position="bottom"
+    ) +
+  transition_time(season) +
+  shadow_mark() +
+  ease_aes()
+
+goal_plot
+
+```
+
+
+### Load the {standings.csv} dataset. We will now analyze how Liverpool FC has performed over the years. Create an animated plot that contains the number of points and the final placement of LFC for every year they have participated in professional football. The exact visualization is up to you
+
+```{r, cache=TRUE}
+
+standings <- read_csv("https://raw.githubusercontent.com/jfjelstul/englishfootball/master/data-csv/standings.csv")
+
+```
+
+
+```{r, fig.cap="The graph represents the seasonal results of the FC Liverpool football club since it began functioning as a professional team. The y-axis indicates the average number of points earned per game while the plotted numbers indicate the final place or position the team finished at in a given year. The team has been relegated to the 2nd division a handful of times in their history, and the colors of the numbers differentiate seasons played at the 1st (red) and 2nd (blue) division."}
+# standings$team_name %>% unique() %>% str_extract("Liver.*")
+standings$position %>% unique() %>% length()
+
+liverpool_standings <- standings %>%
+  dplyr::filter(team_name == "Liverpool")
+
+# division (first division = premier league since 1992)
+# tier, position, points, year
+
+  
+  # geom_point(aes(shape = division_winner), size = 2) +
+  # scale_shape_manual(values=c(8, 5)) +
+  # scale_color_manual(values = c("#c8102E", "#00B2A9"))
+
+lp_standings_plot <-liverpool_standings %>%
+  dplyr::select(tier, position, points, season, played) %>%
+  mutate(points_per_game = points/played) %>%
+  mutate(division_winner = if_else(position == 1, "Division Winner", "Other")) %>%
+  mutate(tier = factor(tier)) %>%
+  ggplot(aes(season, points_per_game, color = tier, group = division_winner, label = position)) +
+  geom_text(aes(alpha = (1/position) ), check_overlap = T, size = 5) +
+  scale_color_manual(
+    name = "Division",
+    labels = c("1st/Premier", "2nd"),
+    values = c("#871527", "#117873")
+    ) + 
+  ylim(c(0,3)) +
+  labs(
+    title = "Seasonal Results for FC Liverpool",
+    subtitle = "Final League Position and Points per Game",
+    x = "Year",
+    y = "Average\nPoints\nPer Game") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.text = element_text(size = 10),
+    axis.title.y = element_text(angle = 0, vjust = 0.5),
+    axis.text.x = element_text(angle = 25, vjust = 0.5),
+    panel.grid.minor = element_blank(),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14),
+    legend.position = "bottom"
+    ) +
+  guides(alpha = "none") 
+
+lp_standings_plot_animated <- lp_standings_plot +
+  transition_time(season) +
+  shadow_mark() +
+  ease_aes()
+ 
+lp_standings_plot_animated 
+
+
+```
+
+
+### Adjust the velocity of your animations. Also change one of your axes with respect to being fixed or not.
+
+```{r, fig.cap="This is the same plot as the previous one with some display modifications; the Y axis is 'free' so that readers take more note of the uptick in points per fame towards the late 20th and early 21st centuries. The plot has been slowed down to 5 frames per second from the {gganimate} default of 10 fps."}
+animate(lp_standings_plot_animated + view_follow(fixed_x = TRUE),
+        fps = 5)
+```
+
