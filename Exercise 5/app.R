@@ -13,6 +13,7 @@
 
 library(shiny)
 library(ggplot2)
+library(dplyr)
 
 # Function to generate correlated data
 generate_correlated_data <- function(correlation, n) {
@@ -53,8 +54,11 @@ ui <- fluidPage(
     ),
     tabPanel(
       "Sandbox",
-      sliderInput("corr_modifier", "Correlation Modifier", min = -1, max = 1, value = 0, step = 0.001),
-      numericInput("observations_adjuster", "Number of Observations", value = 100, min = 1, max = Inf)
+      sliderInput("corr_modifier", "Correlation Modifier",
+                  min = -1, max = 1, value = 0, step = 0.001),
+      numericInput("observations_adjuster", "Number of Observations",
+                   value = 100, min = 1, max = Inf),
+      actionButton("update_correlation", "Update Correlation")
     )
 
   )
@@ -67,7 +71,13 @@ server <- function(input, output, session) {
     updateSliderInput(session, "corr_modifier", value = runif(1, -1, 1))
   })
 
-  df <- reactive({ generate_correlated_data(correlation = input$corr_modifier, n = input$observations_adjuster) })
+  df <- eventReactive(input$update_correlation, {
+    generate_correlated_data(
+    correlation = input$corr_modifier,
+    n = input$observations_adjuster)
+    },
+    ignoreNULL = FALSE)
+
   cor_empirical <- reactive({ cor(df()$x1, df()$x2) })
 
   output$name_output <- renderText({ paste0("Currently Playing: ", input$name_entry) })
