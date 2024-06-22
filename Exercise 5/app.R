@@ -31,7 +31,6 @@ generate_correlated_data <- function(correlation, n) {
 # Define UI
 ui <- fluidPage(
   titlePanel("Pat's Shiny App"),
-
   textOutput("name_output"),
   textInput("name_entry", "Your Name"),
 
@@ -55,12 +54,13 @@ ui <- fluidPage(
     tabPanel(
       "Sandbox",
       sliderInput("corr_modifier", "Correlation Modifier",
-                  min = -1, max = 1, value = 0, step = 0.001),
+        min = -1, max = 1, value = 0, step = 0.001
+      ),
       numericInput("observations_adjuster", "Number of Observations",
-                   value = 100, min = 1, max = Inf),
+        value = 100, min = 1, max = Inf
+      ),
       actionButton("update_correlation", "Update Correlation")
     )
-
   )
 )
 
@@ -71,16 +71,23 @@ server <- function(input, output, session) {
     updateSliderInput(session, "corr_modifier", value = runif(1, -1, 1))
   })
 
-  df <- eventReactive(input$update_correlation, {
-    generate_correlated_data(
-    correlation = input$corr_modifier,
-    n = input$observations_adjuster)
+  df <- eventReactive(input$update_correlation,
+    {
+      generate_correlated_data(
+        correlation = input$corr_modifier,
+        n = input$observations_adjuster
+      )
     },
-    ignoreNULL = FALSE)
+    ignoreNULL = FALSE
+  )
 
-  cor_empirical <- reactive({ cor(df()$x1, df()$x2) })
+  cor_empirical <- reactive({
+    cor(df()$x1, df()$x2)
+  })
 
-  output$name_output <- renderText({ paste0("Currently Playing: ", input$name_entry) })
+  output$name_output <- renderText({
+    paste0("Currently Playing: ", input$name_entry)
+  })
   #
   output$scatterPlot <- renderPlot({
     ggplot(df(), aes(x = x1, y = x2)) +
@@ -105,7 +112,9 @@ server <- function(input, output, session) {
     )
   })
 
-  correlation_difference <- reactive({ input$correlation_guess - cor_empirical() })
+  correlation_difference <- reactive({
+    input$correlation_guess - cor_empirical()
+  })
   output$correlation_difference <- renderPrint({
     correlation_difference()
   })
@@ -117,7 +126,6 @@ server <- function(input, output, session) {
       "Unfortunately, not a great guess..."
     }
   })
-
 }
 
 # Run the application
