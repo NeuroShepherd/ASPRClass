@@ -120,7 +120,8 @@ server <- function(input, output, session) {
 
   #
   output$correlationOutput <- renderPrint({
-    cor_empirical()
+    paste0("The empirical correlation between the randomly generated variables x1 and x2 is: ",
+           round(cor_empirical(), 5))
   })
 
   output$correlation_interpretation <- renderPrint({
@@ -138,7 +139,9 @@ server <- function(input, output, session) {
     input$correlation_guess - cor_empirical()
   })
   output$correlation_difference <- renderPrint({
-    correlation_difference()
+    paste0("You guessed a correlation of ", input$correlation_guess,
+           " which is an absolute difference of ", abs(round(correlation_difference(), 5)),
+           " from the correct value of ", round(cor_empirical(), 5))
   })
 
   output$correlation_diff_text <- renderText({
