@@ -53,12 +53,15 @@ ui <- fluidPage(
     ),
     tabPanel(
       "Sandbox",
+      br(),
+      actionButton("show_function", "Show Generation Function"), br(), br(),
       sliderInput("corr_modifier", "Correlation Modifier",
         min = -1, max = 1, value = 0, step = 0.001
       ),
       numericInput("observations_adjuster", "Number of Observations",
         value = 100, min = 1, max = Inf
-      ),
+      ), br(),
+      helpText("The app will update only after pressing the button below."),
       actionButton("update_correlation", "Update Correlation")
     )
   )
@@ -67,14 +70,24 @@ ui <- fluidPage(
 # Define server
 server <- function(input, output, session) {
   #
+
+  correlation_input <- reactive({
+    if (!req(input$corr_modifier)) {
+      runif(1, -1, 1)
+    } else {
+      input$corr_modifier
+    }
+  })
+
+
   observe({
-    updateSliderInput(session, "corr_modifier", value = runif(1, -1, 1))
+    updateSliderInput(session, "corr_modifier", value = correlation_input())
   })
 
   df <- eventReactive(input$update_correlation,
     {
       generate_correlated_data(
-        correlation = input$corr_modifier,
+        correlation = correlation_input(),
         n = input$observations_adjuster
       )
     },
@@ -90,6 +103,7 @@ server <- function(input, output, session) {
   })
   #
   output$scatterPlot <- renderPlot({
+    # browser()
     ggplot(df(), aes(x = x1, y = x2)) +
       geom_point() +
       labs(x = "x1", y = "x2") +
@@ -126,15 +140,32 @@ server <- function(input, output, session) {
       "Unfortunately, not a great guess..."
     }
   })
+
+
+  output$correlation_fxn <- renderPrint({
+    generate_correlated_data
+  })
+  observeEvent(input$show_function, {
+    showModal(
+      modalDialog(
+        title = "Internals of the Function for Generating Correlated Data",
+        verbatimTextOutput("correlation_fxn")
+      )
+    )
+  })
+
+
 }
 
 # Run the application
 shinyApp(ui = ui, server = server)
 
 
-# my additions:
-# included the session argument which normally should be included in the server, and allowed this to be passed on to the updatedSliderInput function so that the slider input on start up is updated to a random value between -1 and 1, and then the user can also adjust this manually on the slider
+# My additions:
+# I included the `session` argument in the server function, and allowed this to be passed on to the updatedSliderInput function so that the slider input on start up is updated to a random value between -1 and 1, and then the user can also adjust this manually on the slider
 
 # I also updated some of the functions/code to be reactives to reduce duplication of code. For example, some people may have typed code twice to calculate the difference between the correlation guess and the actual correlation when creating the basic numeric output and when writing code for generating the more informative text output e.g. "Great Guess!" or not.
 
-# to do: create an action button for the correlation adjustment because otherwise many computations will be performed as someone moves the slider around and makes temporary adjustments. This is too much reactivity, and we want to observe the action of an input button instead.
+# I created an action button for explicitly executing the correlation adjustment rather than reactively recalculating the values every time there is an adjustment to either the correlation or number of observations. This approach is computationally greedy and unnecessary; computations would otherwise be executed every time a user moves the slider around and makes temporary adjustments. Instead, the Update Correlation button uses observeEvent to execute only when the user presses the button.
+
+# I added a Show Generation Function so that users can easily see the code for the function that generates the correlated data. This is done by creating a modal dialog that displays the code for the function when the button is pressed, and required the use of renderPrint for generating the text output, verbatimTextOutput in the server function, wrapped in the modalDialog function, setting the modal to be rendered with showModal, and triggering the modal dialog to open with observeEvent.
