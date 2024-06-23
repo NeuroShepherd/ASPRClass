@@ -93,6 +93,10 @@ server <- function(input, output, session) {
     ignoreNULL = FALSE
   )
 
+  observeEvent(input$update_correlation, {
+    showNotification("Data Updated!", duration = 5, type = "message")
+  })
+
   cor_empirical <- reactive({
     cor(df()$x1, df()$x2)
   })
@@ -101,10 +105,15 @@ server <- function(input, output, session) {
     paste0("Currently Playing: ", input$name_entry)
   })
   #
+
+  point_color <- eventReactive(input$update_correlation, {
+    paste(sample(0:255,size=3,replace=TRUE),collapse=" ")
+  }, ignoreNULL = FALSE)
+
   output$scatterPlot <- renderPlot({
     # browser()
     ggplot(df(), aes(x = x1, y = x2)) +
-      geom_point() +
+      geom_point(color = point_color(), size =2) +
       labs(x = "x1", y = "x2") +
       theme_minimal()
   })
@@ -166,5 +175,7 @@ shinyApp(ui = ui, server = server)
 # I also updated some of the functions/code to be reactives to reduce duplication of code. For example, some people may have typed code twice to calculate the difference between the correlation guess and the actual correlation when creating the basic numeric output and when writing code for generating the more informative text output e.g. "Great Guess!" or not. Instead, I created the correlation_difference reactive object to calculate the difference between the guess and the actual correlation, and then used this object in the renderPrint and renderText functions to generate the numeric and text outputs, respectively.
 
 # I created an action button for explicitly executing the correlation adjustment rather than reactively recalculating the values every time there is an adjustment to either the correlation or number of observations. This approach is computationally greedy and unnecessary; computations would otherwise be executed every time a user moves the slider around and makes temporary adjustments. Instead, the Update Correlation button uses observeEvent to execute only when the user presses the button.
+
+# In addition to the Update Correlation button, I added a notification to the app that displays a message when the data is updated. This is done by using the showNotification function in the observeEvent function that triggers when the Update Correlation button is pressed. Likewise, the color of the points in the ggplot point plot will have their color changed to a random new color every time the button is pressed. This is done by creating a reactive object point_color that generates an RGB code, and then using this object in the renderPlot function to change the color of the points.
 
 # I added a Show Generation Function so that users can easily see the code for the function that generates the correlated data. This is done by creating a modal dialog that displays the code for the function when the button is pressed, and required the use of renderPrint for generating the text output, verbatimTextOutput in the server function, wrapped in the modalDialog function, setting the modal to be rendered with showModal, and triggering the modal dialog to open with observeEvent.
