@@ -69,7 +69,6 @@ ui <- fluidPage(
 
 # Define server
 server <- function(input, output, session) {
-  #
 
   correlation_input <- reactive({
     if (!req(input$corr_modifier)) {
@@ -162,9 +161,9 @@ shinyApp(ui = ui, server = server)
 
 
 # My additions:
-# I included the `session` argument in the server function, and allowed this to be passed on to the updatedSliderInput function so that the slider input on start up is updated to a random value between -1 and 1, and then the user can also adjust this manually on the slider
+# I included the `session` argument in the server function, and allowed this to be passed on to the updateSliderInput function. The value this slider takes on at start-up is the same value passed to the generate_correlated_data function so the number displayed on the slider and the number used to generate the data are the same (at start up and when the Update Correlation button is pushed, described below.) To do this correctly required creating the reactive object `correlation_input`.
 
-# I also updated some of the functions/code to be reactives to reduce duplication of code. For example, some people may have typed code twice to calculate the difference between the correlation guess and the actual correlation when creating the basic numeric output and when writing code for generating the more informative text output e.g. "Great Guess!" or not.
+# I also updated some of the functions/code to be reactives to reduce duplication of code. For example, some people may have typed code twice to calculate the difference between the correlation guess and the actual correlation when creating the basic numeric output and when writing code for generating the more informative text output e.g. "Great Guess!" or not. Instead, I created the correlation_difference reactive object to calculate the difference between the guess and the actual correlation, and then used this object in the renderPrint and renderText functions to generate the numeric and text outputs, respectively.
 
 # I created an action button for explicitly executing the correlation adjustment rather than reactively recalculating the values every time there is an adjustment to either the correlation or number of observations. This approach is computationally greedy and unnecessary; computations would otherwise be executed every time a user moves the slider around and makes temporary adjustments. Instead, the Update Correlation button uses observeEvent to execute only when the user presses the button.
 
