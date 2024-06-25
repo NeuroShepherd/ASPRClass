@@ -69,7 +69,6 @@ ui <- fluidPage(
 
 # Define server
 server <- function(input, output, session) {
-
   correlation_input <- reactive({
     if (!req(input$corr_modifier)) {
       runif(1, -1, 1)
@@ -106,22 +105,27 @@ server <- function(input, output, session) {
   })
   #
 
-  point_color <- eventReactive(input$update_correlation, {
-    paste(sample(0:255,size=3,replace=TRUE),collapse=" ")
-  }, ignoreNULL = FALSE)
+  point_color <- eventReactive(input$update_correlation,
+    {
+      paste(sample(0:255, size = 3, replace = TRUE), collapse = " ")
+    },
+    ignoreNULL = FALSE
+  )
 
   output$scatterPlot <- renderPlot({
     # browser()
     ggplot(df(), aes(x = x1, y = x2)) +
-      geom_point(color = point_color(), size =2) +
+      geom_point(color = point_color(), size = 2) +
       labs(x = "x1", y = "x2") +
       theme_minimal()
   })
 
   #
   output$correlationOutput <- renderPrint({
-    paste0("The empirical correlation between the randomly generated variables x1 and x2 is: ",
-           round(cor_empirical(), 5))
+    paste0(
+      "The empirical correlation between the randomly generated variables x1 and x2 is: ",
+      round(cor_empirical(), 5)
+    )
   })
 
   output$correlation_interpretation <- renderPrint({
@@ -139,9 +143,11 @@ server <- function(input, output, session) {
     input$correlation_guess - cor_empirical()
   })
   output$correlation_difference <- renderPrint({
-    paste0("You guessed a correlation of ", input$correlation_guess,
-           " which is an absolute difference of ", abs(round(correlation_difference(), 5)),
-           " from the correct value of ", round(cor_empirical(), 5))
+    paste0(
+      "You guessed a correlation of ", input$correlation_guess,
+      " which is an absolute difference of ", abs(round(correlation_difference(), 5)),
+      " from the correct value of ", round(cor_empirical(), 5)
+    )
   })
 
   output$correlation_diff_text <- renderText({
@@ -164,8 +170,6 @@ server <- function(input, output, session) {
       )
     )
   })
-
-
 }
 
 # Run the application
