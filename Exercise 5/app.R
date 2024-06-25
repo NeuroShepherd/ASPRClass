@@ -1,3 +1,4 @@
+# renv::embed("Exercise 5/app.R", project = "./Exercise 5")
 renv::use(
   base64enc    = "base64enc@0.1-3",
   bslib        = "bslib@0.7.0",
@@ -6,8 +7,10 @@ renv::use(
   colorspace   = "colorspace@2.1-0",
   commonmark   = "commonmark@1.9.1",
   crayon       = "crayon@1.5.2",
+  crosstalk    = "crosstalk@1.2.1",
   digest       = "digest@0.6.35",
   dplyr        = "dplyr@1.1.4",
+  DT           = "DT@0.33",
   evaluate     = "evaluate@0.23",
   fansi        = "fansi@1.0.6",
   farver       = "farver@2.1.1",
@@ -29,6 +32,7 @@ renv::use(
   labeling     = "labeling@0.4.3",
   later        = "later@1.3.2",
   lattice      = "lattice@0.22-6",
+  lazyeval     = "lazyeval@0.2.2",
   lifecycle    = "lifecycle@1.0.4",
   magrittr     = "magrittr@2.0.3",
   MASS         = "MASS@7.3-60.2",
@@ -63,6 +67,8 @@ renv::use(
   xtable       = "xtable@1.8-4",
   yaml         = "yaml@2.3.8"
 )
+
+
 
 # Exercise Sheet 5
 # Authors: Pat Callahan (Matrikelnummer: 12672775)
