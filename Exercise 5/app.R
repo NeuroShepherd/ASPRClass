@@ -14,6 +14,7 @@
 library(shiny)
 library(ggplot2)
 library(dplyr)
+library(DT)
 
 # Function to generate correlated data
 generate_correlated_data <- function(correlation, n) {
@@ -40,15 +41,20 @@ ui <- fluidPage(
     tabPanel(
       "Scatter Plot",
       numericInput("correlation_guess", "Your Correlation Guess", value = 0, min = -1, max = 1),
+      helpText("This guess should be a value between -1 and 1."),
       plotOutput("scatterPlot")
     ),
 
     #
     tabPanel(
       "Solution",
+      h4("Correlation Value"),
       verbatimTextOutput("correlationOutput"),
+      h4("Difference between Guess and Correlation"),
       verbatimTextOutput("correlation_difference"),
+      h4("Interpretation of Guess"),
       textOutput("correlation_diff_text"),
+      h4("Interpretation of the Correlation:"),
       textOutput("correlation_interpretation")
     ),
     tabPanel(
@@ -63,7 +69,14 @@ ui <- fluidPage(
       ), br(),
       helpText("The app will update only after pressing the button below."),
       actionButton("update_correlation", "Update Correlation")
+    ),
+
+    tabPanel(
+      "Raw Data",
+      DT::dataTableOutput("raw_data")
     )
+
+
   )
 )
 
@@ -105,6 +118,10 @@ server <- function(input, output, session) {
   })
   #
 
+  output$raw_data <- DT::renderDataTable({
+    df()
+  })
+
   point_color <- eventReactive(input$update_correlation,
     {
       paste(sample(0:255, size = 3, replace = TRUE), collapse = " ")
@@ -128,7 +145,9 @@ server <- function(input, output, session) {
     )
   })
 
-  output$correlation_interpretation <- renderPrint({
+  # This is business logic and could/should be extracted into a separate function.
+  # Easiest to organize this when constructing the project  as an R package.
+  output$correlation_interpretation <- renderText({
     case_when(
       cor_empirical() <= -0.7 ~ "Strong negative correlation",
       cor_empirical() <= 0.3 & cor_empirical() > -0.7 ~ "Moderate negative correlation",
@@ -188,3 +207,5 @@ shinyApp(ui = ui, server = server)
 # I added a Show Generation Function so that users can easily see the code for the function that generates the correlated data in case they want to see empirically how their input values yield the output data. This is done by creating a modal dialog that displays the code for the function when the button is pressed, and required the use of renderPrint for generating the text output, verbatimTextOutput in the server function, wrapped in the modalDialog function, setting the modal to be rendered with showModal, and triggering the modal dialog to open with observeEvent.
 
 # I wrote more informative text ouptut in the Solution tab.
+
+# I added a tab to display the raw data in a data table using the DT package. This is done by creating a reactive object df that generates the data frame of correlated data, and then uses this object in the renderDataTable function to display the data.
