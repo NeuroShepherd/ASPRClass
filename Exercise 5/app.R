@@ -1,4 +1,3 @@
-
 # Exercise Sheet 5
 # Authors: Pat Callahan (Matrikelnummer: 12672775)
 
@@ -71,13 +70,10 @@ ui <- fluidPage(
       helpText("The app will update only after pressing the button below."),
       actionButton("update_correlation", "Update Correlation")
     ),
-
     tabPanel(
       "Raw Data",
       DT::dataTableOutput("raw_data")
     )
-
-
   )
 )
 
