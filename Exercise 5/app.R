@@ -168,11 +168,11 @@ server <- function(input, output, session) {
   })
 
   output$correlation_diff_text <- renderText({
-    if (abs(correlation_difference()) < 0.1) {
-      "Great guess!"
-    } else {
-      "Unfortunately, not a great guess..."
-    }
+    case_when(
+      near(round(abs(correlation_difference()), 5), 0) ~ "Perfect guess! But suspicious...did you cheat?",
+      abs(correlation_difference()) < 0.1 ~ "Great guess!",
+      TRUE ~ "Unfortunately, not a great guess..."
+    )
   })
 
 
@@ -209,3 +209,5 @@ shinyApp(ui = ui, server = server)
 # I wrote more informative text ouptut in the Solution tab, and provided headers to the different sections.
 
 # I added a tab to display the raw data in a data table using the DT package. This is done by creating a reactive object df that generates the data frame of correlated data, and then I pass this object to the renderDataTable function to display the data. The object is then displayed with DT::dataTableOutput. (See output$raw_data).
+
+# I added a text Easter egg for when someone perfectly answers the correlation guess.
