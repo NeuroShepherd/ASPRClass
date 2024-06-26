@@ -99,13 +99,13 @@ server <- function(input, output, session) {
         correlation = correlation_input(),
         n = input$observations_adjuster
       )
-
-      # display notification after data is updated
-      showNotification("Data Updated!", duration = 5, type = "message")
-
     },
     ignoreNULL = FALSE
   )
+
+  observeEvent(input$update_correlation, {
+    showNotification("Data Updated!", duration = 5, type = "message")
+  })
 
   cor_empirical <- reactive({
     cor(df()$x1, df()$x2)
