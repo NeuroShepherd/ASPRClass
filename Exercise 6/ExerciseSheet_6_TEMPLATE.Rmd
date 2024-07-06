@@ -1,0 +1,91 @@
+---
+title: "Exercise #X"
+subtitle: "Fortgeschrittene Statistische Software für NF"
+author: "Name (Martrikelnummer), Name (Martrikelnummer), ..."
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+## General Remarks
+
+-   You can submit your solutions in teams of up to 3 students.
+-   Include all your team-member's names and student numbers
+    (Martrikelnummern) in the `authors` field.
+-   Please use the exercise template document to work on and submit your
+    results.
+-   Use a level 2 heading for each new exercise and answer each subtask
+    next to it's bullet point or use a new level 3 heading if you want.
+-   Always render the R code for your solutions and make sure to include
+    the resulting data in your rendered document.
+    -   Make sure to not print more than 10 rows of data (unless
+        specifically instructed to).
+-   Always submit both the rendered document(s) as well as your source
+    Rmarkdown document. Submit the files separately on moodle, **not**
+    as a zip archive.
+-   Make sure to submit you render your Rmarkdown as
+    `distill:distill_article` and check the final output regarding any
+    issues in formatting. Formatting errors may lead to point
+    deductions.
+
+## Exercise 1: Building an R package (20 Points)
+
+For this exercise we ask you to build an R package. We do not ask you to
+build any particular R package, but leave the choice of what your R
+package will do up to you, to keep it more interesting for you.
+
+Instead of having particular tasks for you to complete, we have a list
+of requirements for your final R package and submission. Please submit
+an Rmd and render it as always, although you will only have to provide
+the short information asked for under *Submission*.
+
+We advise you to start early with this exercise sheet and encourage you
+to reach out if you encounter issues during the creation of your
+package. For detailed information on all aspects of creating an R
+package, we highlight again, the [great book on R
+packages](https://r-pkgs.org/) by Hadley Wickham.
+
+We look forward to seeing the cool packages you come up with and thank
+you for participating in the course!
+
+### Functionality
+
+a)  Create a working R package that performs the task it is intended to
+    do
+
+b)  Your R package needs to be installable (test this before submitting)
+
+c)  Your R package should contain at least 2 functions
+
+d)  The functions in your R package should be properly documented
+    according to the Roxygen convention. Each function should include an
+    `@example` tag.
+
+e)  The documentation for your package should be properly generated and
+    up-to-date. After every change to the Roxygen comments of your
+    functions, you will need to run `devtools::document()` again to do
+    this.
+
+f)  The `DESCRIPTION` file of your package should be properly formatted
+    and contain all the required dependencies of your package. It should
+    also provide an accurate `Title` and `Description` for your package.
+
+### Submission
+
+a)  Briefly describe in one - two sentences what your R package does and
+    why you decided to choose this functionality. This is just intended
+    to give us some context to better understand the package.
+
+b)  To make installation easier, your R package should be in a public
+    repository on GitHub. Provide the URL to the GitHub repository
+    below:
+
+e.g. `https://github.com/<YOUR_GH_USERNAME>/<PACKAGE_REPOSITORY_NAME>`
+
+c)  Your R package should be installable via
+    `remotes::install_github()`. Before submitting your solution to this
+    exercise sheet please test whether you can install your R package
+    from GitHub. Provide the command below:
+
+``` r
+remotes::install_github("<YOUR_GH_USERNAME>/<PACKAGE_REPOSITORY_NAME>")
+```
